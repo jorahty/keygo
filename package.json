@@ -1,0 +1,15 @@
+{
+  "name": "keygo",
+  "dependencies": {
+    "express": "*",
+    "socket.io": "*",
+    "matter-js": "*",
+    "poly-decomp": "*"
+  },
+  "devDependencies": {
+    "nodemon": "*"
+  },
+  "scripts": {
+    "start": "nodemon index.js"
+  }
+}
