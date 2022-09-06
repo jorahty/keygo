@@ -26,7 +26,7 @@ Runner.run(runner, engine);
 Composite.add(world,
   Bodies.fromVertices(0, 0,
     Vertices.fromPath(paths['terrain']),
-    { isStatic: true },
+    { friction: 0.01, isStatic: true },
   ),
 );
 
