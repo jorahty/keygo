@@ -67,7 +67,7 @@ section {
 
 section > * {
   border-radius: 8px;
-  outline: 2px solid black;
+  box-shadow: 0 0 0 2px #000;
   background: #456;
 }
 
@@ -93,18 +93,16 @@ section:nth-child(odd) > *:nth-child(3) > *:nth-child(odd) {
   width: var(--health);
   height: 100%;
   background: #b55;
-  transition: width 1s;
 }
 
 section:nth-child(odd) > *:nth-child(3) > *:nth-child(even) {
   width: calc(100% - var(--health) - 2px);
   height: 100%;
   background: #888;
-  transition: width 1s;
 }
 
 section:nth-child(odd) > *:nth-child(4) {
-  outline: none;
+  box-shadow: none;
   background: transparent;
 }
 

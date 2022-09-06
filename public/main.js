@@ -45,8 +45,8 @@ var render = Render.create({
 
 // center the render viewport (aka camera) about origin
 Render.lookAt(render, {
-  min: { x: -600, y: -600 },
-  max: { x: 600, y: 600 },
+  min: { x: -400, y: -400 },
+  max: { x: 400, y: 400 },
 });
 
 // run the renderer
