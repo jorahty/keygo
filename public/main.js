@@ -89,9 +89,9 @@ hitpoints.textContent = 100;
 
 // connect to server
 
-// const nickname = prompt('Nickname'); // get nickname
-const nickname = Date.now().toString(16).slice(8); // temp
-console.log(nickname);
+const nickname = prompt('Nickname'); // get nickname
+// const nickname = Date.now().toString(16).slice(8); // temp
+// console.log(nickname); // temp
 
 const socket = io(); // connect to server
 socket.emit('nickname', nickname); // send nickname
@@ -198,20 +198,9 @@ onkeyup = e => {
   socket.volatile.emit('input', e.key.toUpperCase());
 };
 
-// // listen for injury
-
-// const healthBar = document.createElement('nav');
-// document.body.prepend(healthBar);
-// healthBar.textContent = healthBar.style.width = '100%';
-
-// socket.on('injury', health => {
-//   healthBar.textContent = healthBar.style.width = `${health}%`;
-// });
-
 // listen for strike
-
 socket.on('strike', (damage, positions) => {
-  positions.forEach(({x, y}) => {
+  positions.forEach(({ x, y }) => {
     // create damage indicator
     const damageIndicator = Body.create({
       position: { x, y },
@@ -227,10 +216,40 @@ socket.on('strike', (damage, positions) => {
       },
     });
 
-    console.log(damage, x, y);
-
     // render damage indicator for 2 seconds
     Composite.add(world, damageIndicator);
     setTimeout(() => Composite.remove(world, damageIndicator), 2000);
   });
 });
+
+// listen for injury
+socket.on('injury', health => {
+  document.querySelector(':root')
+    .style.setProperty('--health', `${health}%`);
+  hitpoints.textContent = health;
+});
+
+// listen for kill
+socket.on('kill', nickname => {
+  display(`you eliminated ${nickname}`);
+});
+
+// listen for death
+socket.on('death', nickname => {
+  // reset health
+  document.querySelector(':root')
+    .style.setProperty('--health', `100%`);
+  hitpoints.textContent = 100;
+
+  display(`${nickname} eliminated you`);
+});
+
+function display(message) {
+  console.log(message);
+  const p = document.createElement('p');
+  document.body.appendChild(p);
+  p.textContent = message;
+  setTimeout(() => (
+    document.body.removeChild(p)
+  ), 2000);
+}

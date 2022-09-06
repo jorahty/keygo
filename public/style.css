@@ -32,8 +32,8 @@ body {
 
 body * {
   font-family: 'Arial Rounded MT Bold', system-ui;
-  color: #000;
-  font-weight: bold;
+  color: #ccc;
+  text-shadow: 0 0.03em #000, 0 0.06em #000, 0 0.09em #000;
 }
 
 body > * {
@@ -50,6 +50,13 @@ table {
   padding: 5px;
   margin: 0;
   font-size: small;
+}
+
+p {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 section {
@@ -86,12 +93,14 @@ section:nth-child(odd) > *:nth-child(3) > *:nth-child(odd) {
   width: var(--health);
   height: 100%;
   background: #b55;
+  transition: width 1s;
 }
 
 section:nth-child(odd) > *:nth-child(3) > *:nth-child(even) {
   width: calc(100% - var(--health) - 2px);
   height: 100%;
   background: #888;
+  transition: width 1s;
 }
 
 section:nth-child(odd) > *:nth-child(4) {

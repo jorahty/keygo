@@ -39,8 +39,8 @@ Composite.add(world, dynamic);
   const body = Bodies.fromVertices(-400 + 800 * Math.random(), -1000,
     Vertices.fromPath(paths[kind]),
     {
-      mass: 0.2,
-      friction: 0.01,
+      mass: 0.1,
+      friction: 0.001,
     }
   );
   body.kind = kind;
@@ -58,7 +58,7 @@ io.on('connection', socket => {
 
   // create player
   const arrow = Vertices.fromPath(paths['player']);
-  const player = Bodies.fromVertices(0, -300, arrow, {
+  const player = Bodies.fromVertices(0, -1000, arrow, {
     mass: 0.5,
     friction: 0.01,
   });
@@ -165,7 +165,7 @@ Events.on(engine, "collisionStart", ({ pairs }) => {
     const attacker = vertex.body;
     const victim = attacker === bodyA ? bodyB : bodyA;
 
-    if (victim.stabImmune) return; // return if shielded
+    if (victim.stabImmune) return; // return if immune
 
     // make victim immune to stab for 0.5 seconds
     victim.stabImmune = true;
@@ -193,9 +193,12 @@ function injury(player, amount, attacker) {
 
   // check if dead
   if (player.health <= 0) {
+    io.to(socketIds.get(player.id)).emit('death', attacker.nickname);
+    io.to(socketIds.get(attacker.id)).emit('kill', player.nickname);
+
     player.health = 100;
-    Body.setPosition(player, { x: 400, y: 100 });
-    attacker.tokens += 1;
+    Body.setPosition(player, { x: 0, y: -500 });
+    return;
   }
 
   // emit 'injury' with new health

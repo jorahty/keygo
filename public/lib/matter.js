@@ -6366,6 +6366,13 @@ var Mouse = __webpack_require__(13);
 
         Events.trigger(render, 'beforeRender', event);
 
+        // sort bodies by zIndex
+        allBodies.sort((a, b) => {
+            const zIndexA = a.render && typeof a.render.zIndex !== 'undefined' ? a.render.zIndex : 0;
+            const zIndexB = b.render && typeof b.render.zIndex !== 'undefined' ? b.render.zIndex : 0;
+            return zIndexA - zIndexB;
+        });
+
         // apply background if it has changed
         if (render.currentBackground !== background)
             _applyBackground(render, background);
@@ -6762,7 +6769,30 @@ var Mouse = __webpack_require__(13);
                     c.globalAlpha = part.render.opacity;
                 }
 
-                if (part.render.sprite && part.render.sprite.texture && !options.wireframes) {
+                if (part.render.text && !options.wireframes) {
+                    // part text
+                    var text = part.render.text;
+
+                    c.translate(part.position.x, part.position.y);
+                    c.rotate(part.angle);
+
+                    c.textBaseline = 'middle';
+                    c.textAlign = 'center';
+                    c.fillStyle = part.render.fillStyle;
+                    c.font = text.font;
+
+                    if (part.render.lineWidth) {
+                        c.lineWidth = part.render.lineWidth;
+                        c.strokeStyle = part.render.strokeStyle;
+                        c.strokeText(text.content, 0, 0);
+                    }
+
+                    c.fillText(text.content, 0, 0);
+
+                    // revert translation, hopefully faster than save / restore
+                    c.rotate(-part.angle);
+                    c.translate(-part.position.x, -part.position.y);
+                } else if (part.render.sprite && part.render.sprite.texture && !options.wireframes) {
                     // part sprite
                     var sprite = part.render.sprite,
                         texture = _getTexture(render, sprite.texture);
