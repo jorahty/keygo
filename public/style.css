@@ -101,7 +101,7 @@ section:nth-child(odd) > *:nth-child(3) {
 section:nth-child(odd) > *:nth-child(3) > *:nth-child(odd) {
   width: var(--health);
   height: 100%;
-  background: #b55;
+  background: #c07578;
 }
 
 section:nth-child(odd) > *:nth-child(3) > *:nth-child(even) {
