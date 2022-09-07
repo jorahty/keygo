@@ -125,6 +125,7 @@ button {
   font-size: 4vh;
   height: calc(50% - 1.5vh / 2);
   text-transform: uppercase;
+  outline: none;
 }
 
 button:nth-child(3) {

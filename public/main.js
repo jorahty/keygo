@@ -89,9 +89,9 @@ hitpoints.textContent = 100;
 
 // connect to server
 
-const nickname = prompt('Nickname'); // get nickname
-// const nickname = Date.now().toString(16).slice(8); // temp
-// console.log(nickname); // temp
+// const nickname = prompt('Nickname'); // get nickname
+const nickname = Date.now().toString(16).slice(8); // temp
+console.log(nickname); // temp
 
 const socket = io(); // connect to server
 socket.emit('nickname', nickname); // send nickname
@@ -167,35 +167,36 @@ socket.on('leaderboard', lb => {
 const controls = document.createElement('section');
 document.body.appendChild(controls);
 
+// define controls
 const left = document.createElement('button');
 const right = document.createElement('button');
 const translate = document.createElement('button');
 
-left.textContent = 'a';
-right.textContent = 'd';
-translate.textContent = 'l';
+// define map
+const bindings = new Map();
+bindings.set('a', left);
+bindings.set('d', right);
+bindings.set('l', translate);
 
-[left, right, translate].forEach(control => {
+for (const [code, control] of bindings) {
   controls.appendChild(control);
-  control.onpointerdown = e => input(e, true);
-  control.onpointerup = e => input(e, false);
-});
+  control.textContent = code;
+  control.onpointerdown = e => input(code, true);
+  control.onpointerup = e => input(code, false);
+}
 
-function input(e, down) {
-  e.target.style.opacity = down ? 0.5 : 1;
-  let code = e.target.textContent;
+function input(code, down) {
+  bindings.get(code).style.opacity = down ? 0.5 : 1;
   if (!down) code = code.toUpperCase();
   socket.volatile.emit('input', code);
 }
 
 onkeydown = e => {
-  if (!'adl'.includes(e.key)) return;
-  socket.volatile.emit('input', e.key);
+  if ('adl'.includes(e.key)) input(e.key, true);
 };
 
 onkeyup = e => {
-  if (!'adl'.includes(e.key)) return;
-  socket.volatile.emit('input', e.key.toUpperCase());
+  if ('adl'.includes(e.key)) input(e.key, false);
 };
 
 // listen for strike
