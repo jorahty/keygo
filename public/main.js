@@ -186,7 +186,7 @@ for (const [code, control] of bindings) {
 }
 
 function input(code, down) {
-  bindings.get(code).style.opacity = down ? 0.5 : 1;
+  bindings.get(code).className = down ? 'down' : '';
   if (!down) code = code.toUpperCase();
   socket.volatile.emit('input', code);
 }
@@ -252,5 +252,5 @@ function display(message) {
   p.textContent = message;
   setTimeout(() => (
     document.body.removeChild(p)
-  ), 2000);
+  ), 3000);
 }
