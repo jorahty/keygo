@@ -36,8 +36,8 @@ var render = Render.create({
   engine: engine,
   options: {
     wireframes: false,
-    width: 600,
-    height: 600,
+    width: 800,
+    height: 850,
     hasBounds: true,
     background: '#678',
   },
@@ -145,7 +145,9 @@ function moveCamera() {
   // compute vector from render.position to player.position
   const delta = Vector.sub(me.position, render.position);
 
-  // on this update, only translate 10% of the way
+  if (Vector.magnitude(delta) < 1) return; // don't bother
+
+  // on this update, only move camera 10% of the way
   Bounds.translate(render.bounds, Vector.mult(delta, 0.1));
 }
 
@@ -161,6 +163,61 @@ socket.on('leaderboard', lb => {
     }
   }
 });
+
+// listen for strike
+socket.on('strike', (damage, positions) => {
+  positions.forEach(({ x, y }) => {
+    // create damage indicator
+    const damageIndicator = Body.create({
+      position: { x, y },
+      render: {
+        fillStyle: '#ea7',
+        zIndex: 10,
+        lineWidth: 5,
+        strokeStyle: '#000',
+        text: {
+          content: damage,
+          font: 'bold 48px system-ui',
+        },
+      },
+    });
+
+    // render damage indicator for 2 seconds
+    Composite.add(world, damageIndicator);
+    setTimeout(() => Composite.remove(world, damageIndicator), 2000);
+  });
+});
+
+// listen for injury
+socket.on('injury', health => {
+  document.querySelector(':root')
+    .style.setProperty('--health', `${health}%`);
+  hitpoints.textContent = health;
+});
+
+// listen for kill
+socket.on('kill', nickname => {
+  display(`you eliminated ${nickname}`);
+});
+
+// listen for death
+socket.on('death', nickname => {
+  // reset health
+  document.querySelector(':root')
+    .style.setProperty('--health', `100%`);
+  hitpoints.textContent = 100;
+
+  display(`${nickname} eliminated you`);
+});
+
+function display(message) {
+  const p = document.createElement('p');
+  document.body.appendChild(p);
+  p.textContent = message;
+  setTimeout(() => (
+    document.body.removeChild(p)
+  ), 3000);
+}
 
 // ██ create and configure controls to send input to server ██
 
@@ -198,59 +255,3 @@ onkeydown = e => {
 onkeyup = e => {
   if ('adl'.includes(e.key)) input(e.key, false);
 };
-
-// listen for strike
-socket.on('strike', (damage, positions) => {
-  positions.forEach(({ x, y }) => {
-    // create damage indicator
-    const damageIndicator = Body.create({
-      position: { x, y },
-      render: {
-        fillStyle: '#ea7',
-        zIndex: 10,
-        lineWidth: 5,
-        strokeStyle: '#000',
-        text: {
-          content: damage,
-          font: 'bold 48px Arial Rounded MT Bold',
-        },
-      },
-    });
-
-    // render damage indicator for 2 seconds
-    Composite.add(world, damageIndicator);
-    setTimeout(() => Composite.remove(world, damageIndicator), 2000);
-  });
-});
-
-// listen for injury
-socket.on('injury', health => {
-  document.querySelector(':root')
-    .style.setProperty('--health', `${health}%`);
-  hitpoints.textContent = health;
-});
-
-// listen for kill
-socket.on('kill', nickname => {
-  display(`you eliminated ${nickname}`);
-});
-
-// listen for death
-socket.on('death', nickname => {
-  // reset health
-  document.querySelector(':root')
-    .style.setProperty('--health', `100%`);
-  hitpoints.textContent = 100;
-
-  display(`${nickname} eliminated you`);
-});
-
-function display(message) {
-  console.log(message);
-  const p = document.createElement('p');
-  document.body.appendChild(p);
-  p.textContent = message;
-  setTimeout(() => (
-    document.body.removeChild(p)
-  ), 3000);
-}
