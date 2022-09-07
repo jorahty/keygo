@@ -39,14 +39,14 @@ var render = Render.create({
     width: 800,
     height: 850,
     hasBounds: true,
-    background: '#678',
+    background: '#525053',
   },
 });
 
 // center the render viewport (aka camera) about origin
 Render.lookAt(render, {
-  min: { x: -400, y: -400 },
-  max: { x: 400, y: 400 },
+  min: { x: -360, y: -360 },
+  max: { x: 360, y: 360 },
 });
 
 // run the renderer
@@ -89,9 +89,9 @@ hitpoints.textContent = 100;
 
 // connect to server
 
-// const nickname = prompt('Nickname'); // get nickname
-const nickname = Date.now().toString(16).slice(8); // temp
-console.log(nickname); // temp
+const nickname = prompt('Nickname'); // get nickname
+// const nickname = Date.now().toString(16).slice(8); // temp
+// console.log(nickname); // temp
 
 const socket = io(); // connect to server
 socket.emit('nickname', nickname); // send nickname
@@ -171,7 +171,7 @@ socket.on('strike', (damage, positions) => {
     const damageIndicator = Body.create({
       position: { x, y },
       render: {
-        fillStyle: '#ea7',
+        fillStyle: '#ebbb7d',
         zIndex: 10,
         lineWidth: 5,
         strokeStyle: '#000',

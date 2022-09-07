@@ -63,7 +63,7 @@ td {
 
 p {
   position: absolute;
-  top: calc(min(60vh, 100vw) - 5vh);
+  top: calc(min(60vh, 100vw) - 2vh);
   left: 50%;
   transform: translate(-50%, -50%);
 }
