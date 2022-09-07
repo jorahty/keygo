@@ -27,29 +27,33 @@ body {
   max-width: 60vh;
   position: relative;
   box-sizing: border-box;
-  border: 2px solid black;
+  box-shadow: 0.2vh 0 #000, -0.2vh 0 #000;
 }
 
 body * {
-  font-family: 'Arial Rounded MT Bold', system-ui;
-  color: #ccc;
-  text-shadow: 0 0.03em #000, 0 0.06em #000, 0 0.09em #000;
+  font-family: system-ui;
+  font-weight: bold;
+  color: #ffffff88;
+  font-size: 2vh;
 }
 
 body > * {
-  margin-bottom: 10px;
+  margin-bottom: 1.5vh;
 }
 
 canvas {
   width: 100%;
-  border-bottom: 2px solid black;
+  border-bottom: 0.2vh solid black;
 }
 
 table {
   position: absolute;
-  padding: 5px;
+  padding: 0.5vh;
   margin: 0;
-  font-size: small;
+}
+
+td {
+  font-size: 1.6vh;
 }
 
 p {
@@ -60,20 +64,20 @@ p {
 }
 
 section {
-  padding: 0 10px;
+  padding: 0 1.5vh;
   display: flex;
-  gap: 10px
+  gap: 1.5vh
 }
 
 section > * {
-  border-radius: 8px;
-  box-shadow: 0 0 0 2px #000;
+  border-radius: 1.2vh;
+  box-shadow: 0 0 0 0.2vh #000;
   background: #456;
 }
 
 section:nth-child(odd) > * {
-  height: 40px;
-  width: 40px;
+  height: 5vh;
+  width: 5vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -83,7 +87,7 @@ section:nth-child(odd) > * {
 section:nth-child(odd) > *:nth-child(3) {
   width: unset;
   flex-grow: 1;
-  gap: 2px;
+  gap: 0.2vh;
   background: #000;
   overflow: hidden;
   flex-wrap: wrap;
@@ -96,7 +100,7 @@ section:nth-child(odd) > *:nth-child(3) > *:nth-child(odd) {
 }
 
 section:nth-child(odd) > *:nth-child(3) > *:nth-child(even) {
-  width: calc(100% - var(--health) - 2px);
+  width: calc(100% - var(--health) - 0.2vh);
   height: 100%;
   background: #888;
 }
@@ -104,6 +108,7 @@ section:nth-child(odd) > *:nth-child(3) > *:nth-child(even) {
 section:nth-child(odd) > *:nth-child(4) {
   box-shadow: none;
   background: transparent;
+  justify-content: left;
 }
 
 /* controls */
@@ -117,8 +122,8 @@ section:nth-child(even) {
 button {
   box-sizing: border-box;
   border: none;
-  font-size: xx-large;
-  height: calc(50% - 5px);
+  font-size: 4vh;
+  height: calc(50% - 1.5vh / 2);
   text-transform: uppercase;
 }
 
