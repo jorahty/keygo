@@ -160,8 +160,14 @@ Events.on(engine, "collisionStart", ({ pairs }) => {
     if (!(bodyA.kind === 'player' || bodyB.kind === 'player')) continue;
 
     // if other is loot, handle pickup
-    if (bodyA.class === 'loot') handlePickup(bodyB, bodyA);
-    if (bodyB.class === 'loot') handlePickup(bodyA, bodyB);
+    if (bodyA.class === 'loot') {
+      handlePickup(bodyB, bodyA);
+      continue;
+    }
+    if (bodyB.class === 'loot') { 
+      handlePickup(bodyA, bodyB);
+      continue;
+    }
 
     // if other is entity, handle stab
     if (bodyA.class === 'entity' || bodyB.class === 'entity') {
