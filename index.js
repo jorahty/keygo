@@ -30,15 +30,15 @@ Composite.add(world,
   ),
 );
 
-// create composite for dynamic bodies for fast access
+// create composite for dynamic bodies for
+// fast access when extracting gamestate
 const dynamic = Composite.create();
 Composite.add(world, dynamic);
 
 // generate npcs, chests, loot
 ['chest', 'sword', 'shield', 'worm', 'token'].forEach(kind => {
   const body = Bodies.fromVertices(-400 + 800 * Math.random(), -1000,
-    Vertices.fromPath(paths[kind]),
-    {
+    Vertices.fromPath(paths[kind]), {
       mass: 0.1,
       friction: 0.001,
     }
@@ -57,8 +57,8 @@ io.on('connection', socket => {
   console.log(`New player! Player count: ${++playerCount}`);
 
   // create player
-  const arrow = Vertices.fromPath(paths['player']);
-  const player = Bodies.fromVertices(0, -1000, arrow, {
+  const player = Bodies.fromVertices(0, -1000,
+    Vertices.fromPath(paths['player']), {
     mass: 0.5,
     friction: 0.01,
   });
@@ -92,7 +92,7 @@ io.on('connection', socket => {
 
   // move player according to control state
   Events.on(engine, 'beforeUpdate', () => {
-    const {a, d, l} = player.controls;
+    const { a, d, l } = player.controls;
     const t = 0.04, f = 0.0015; // magnitudes
 
     if (a) player.torque = -t;
@@ -117,7 +117,7 @@ io.on('connection', socket => {
 
 // emit regular updates to clients
 // extract and broadcast gamestate
-// update dynamic bodies
+// send dynamic bodies update
 setInterval(() => {
   const gamestate = dynamic.bodies.map(body => ({
     i: body.id,
@@ -139,6 +139,7 @@ setInterval(() => {
 
   const top = players.slice(0, 3);
 
+  // send each player their custom leaderboard
   for (const [playerId, socketId] of socketIds) {
     const you = players.find(player => player.id === playerId);
 
@@ -183,7 +184,7 @@ Events.on(engine, "collisionStart", ({ pairs }) => {
 });
 
 function strike(player, amount, positions) {
-  // emit 'strike' with damage dealt and position
+  // emit 'strike' with damage dealt and positions
   io.to(socketIds.get(player.id)).emit('strike', amount, positions);
 }
 
