@@ -238,8 +238,8 @@ bindings.set('l', translate);
 for (const [code, control] of bindings) {
   controls.appendChild(control);
   control.textContent = code;
-  control.onpointerdown = e => input(code, true);
-  control.onpointerup = e => input(code, false);
+  control.onpointerdown = () => input(code, true);
+  control.onpointerup = () => input(code, false);
 }
 
 function input(code, down) {

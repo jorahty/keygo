@@ -44,6 +44,7 @@ Composite.add(world, dynamic);
     }
   );
   body.kind = kind;
+  body.class = ['worm', 'chest'].includes(kind) ? 'entity' : 'loot';
   Composite.add(dynamic, body);
 });
 
@@ -62,6 +63,7 @@ io.on('connection', socket => {
     mass: 0.5,
     friction: 0.01,
   });
+  player.class = 'entity'; // every dynamic body needs class (for collision type)
   player.kind = 'player'; // every dynamic body needs kind
   player.controls = {};
   player.health = 100;
@@ -154,34 +156,52 @@ setInterval(() => {
 // listen for collisions
 Events.on(engine, "collisionStart", ({ pairs }) => {
   for (const {bodyA, bodyB, activeContacts, collision} of pairs) {
-    // both bodies must be players
-    if (!bodyA.controls || !bodyB.controls) continue;
+    // if neither is player, skip
+    if (!(bodyA.kind === 'player' || bodyB.kind === 'player')) continue;
 
-    // must be a stab with nose
-    if (activeContacts.length != 1) continue;
-    const { vertex } = activeContacts[0];
-    if (vertex.index != 0) continue;
+    // if other is loot, handle pickup
+    if (bodyA.class === 'loot') handlePickup(bodyB, bodyA);
+    if (bodyB.class === 'loot') handlePickup(bodyA, bodyB);
 
-    // identify attacker and victim
-    const attacker = vertex.body;
-    const victim = attacker === bodyA ? bodyB : bodyA;
-
-    if (victim.stabImmune) return; // return if immune
-
-    // make victim immune to stab for 0.5 seconds
-    victim.stabImmune = true;
-    setTimeout(() => victim.stabImmune = false, 500);
-
-    // compute damage
-    const damage = Math.round(collision.depth * 5);
-
-    strike(attacker, damage, [{
-      x: Math.round(vertex.x),
-      y: Math.round(vertex.y),
-    }]);
-    injury(victim, damage, attacker);
+    // if other is entity, handle stab
+    if (bodyA.class === 'entity' || bodyB.class === 'entity') {
+      handleStab(bodyA, bodyB, activeContacts, collision);
+    }
   }
 });
+
+function handlePickup(player, loot) {
+  console.log(`${player.nickname} picked up ${loot.kind}`);
+}
+
+function handleStab(bodyA, bodyB, activeContacts, collision) {
+  // both bodies must be players
+  if (!bodyA.controls || !bodyB.controls) return;
+
+  // must be a stab with nose
+  if (activeContacts.length != 1) return;
+  const { vertex } = activeContacts[0];
+  if (vertex.index != 0) return;
+
+  // identify attacker and victim
+  const attacker = vertex.body;
+  const victim = attacker === bodyA ? bodyB : bodyA;
+
+  if (victim.stabImmune) return; // return if immune
+
+  // make victim immune to stab for 0.5 seconds
+  victim.stabImmune = true;
+  setTimeout(() => victim.stabImmune = false, 500);
+
+  // compute damage
+  const damage = Math.round(collision.depth * 5);
+
+  strike(attacker, damage, [{
+    x: Math.round(vertex.x),
+    y: Math.round(vertex.y),
+  }]);
+  injury(victim, damage, attacker);
+}
 
 function strike(player, amount, positions) {
   // emit 'strike' with damage dealt and positions
