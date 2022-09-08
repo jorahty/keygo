@@ -156,7 +156,7 @@ socket.on('leaderboard', lb => {
   for (let i = 0; i < 4; i++) { // iterate over all 4 rows
     const row = leaderboard.childNodes[i];
     if (i < lb.length) {
-      row.firstChild.textContent = lb[i].tokens;
+      row.firstChild.textContent = lb[i].token;
       row.lastChild.textContent = lb[i].nickname;
     } else {
       row.firstChild.textContent = row.lastChild.textContent = '';
@@ -208,6 +208,12 @@ socket.on('death', nickname => {
   hitpoints.textContent = 100;
 
   display(`${nickname} eliminated you`);
+});
+
+// listen for upgrade
+socket.on('upgrade', (kind, level) => {
+  if (kind === 'sword') sword.textContent = level;
+  if (kind === 'shield') shield.textContent = level;
 });
 
 function display(message) {

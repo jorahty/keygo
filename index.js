@@ -67,7 +67,7 @@ io.on('connection', socket => {
   player.kind = 'player'; // every dynamic body needs kind
   player.controls = {};
   player.health = 100;
-  player.tokens = 1;
+  player.token = 1;
   player.sword = 0;
   player.shield = 0;
 
@@ -137,7 +137,7 @@ setInterval(() => {
     body => body.kind === 'player'
   );
 
-  players.sort((a, b) => b.tokens - a.tokens);
+  players.sort((a, b) => b.token - a.token);
 
   const top = players.slice(0, 3);
 
@@ -148,7 +148,7 @@ setInterval(() => {
     const leaderboard = top.includes(you) ? top : top.concat(you);
 
     io.to(socketId).emit('leaderboard', leaderboard.map(
-      ({ nickname, tokens }) => ({ nickname, tokens })
+      ({ nickname, token }) => ({ nickname, token })
     ));
   }
 }, 3000);
@@ -159,13 +159,13 @@ Events.on(engine, "collisionStart", ({ pairs }) => {
     // if neither is player, skip
     if (!(bodyA.kind === 'player' || bodyB.kind === 'player')) continue;
 
-    // if other is loot, handle pickup
+    // if other is loot, handle upgrade
     if (bodyA.class === 'loot') {
-      handlePickup(bodyB, bodyA);
+      handleUpgrade(bodyB, bodyA);
       continue;
     }
     if (bodyB.class === 'loot') { 
-      handlePickup(bodyA, bodyB);
+      handleUpgrade(bodyA, bodyB);
       continue;
     }
 
@@ -176,8 +176,14 @@ Events.on(engine, "collisionStart", ({ pairs }) => {
   }
 });
 
-function handlePickup(player, loot) {
-  console.log(`${player.nickname} picked up ${loot.kind}`);
+function handleUpgrade(player, loot) {
+  player[loot.kind]++ // upgrade player
+
+  // inform player of their upgrade
+  io.to(socketIds.get(player.id)).emit('upgrade', loot.kind, player[loot.kind]);
+
+  Composite.remove(dynamic, loot); // remove loot from world
+  io.emit('remove', loot.id); // let everyone know loot was removed
 }
 
 function handleStab(bodyA, bodyB, activeContacts, collision) {
