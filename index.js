@@ -255,47 +255,22 @@ function popPlayer(entity) {
   
   const { x, y } = entity.position;
 
-  // add tokens
-  for (let i = 0; i < entity.token; i++) {
+  const addLoot = (kind) => {
     const token = Bodies.fromVertices(x, y,
-      Vertices.fromPath(paths['token']), {
+      Vertices.fromPath(paths[kind]), {
         mass: 0.1,
         friction: 0.001,
       }
     );
-    token.kind = 'token';
+    token.kind = kind;
     token.class = 'loot';
     Composite.add(dynamic, token);
-    io.emit('add', token.id, 'token');
-  }
-  
-  // add sword
-  if (entity.sword > 0) {
-    const sword = Bodies.fromVertices(x, y,
-      Vertices.fromPath(paths['sword']), {
-        mass: 0.1,
-        friction: 0.001,
-      }
-    );
-    sword.kind = 'sword';
-    sword.class = 'loot';
-    Composite.add(dynamic, sword);
-    io.emit('add', sword.id, 'sword');
+    io.emit('add', token.id, kind);
   }
 
-  // add shield
-  if (entity.shield > 0) {
-    const shield = Bodies.fromVertices(x, y,
-      Vertices.fromPath(paths['shield']), {
-        mass: 0.1,
-        friction: 0.001,
-      }
-    );
-    shield.kind = 'shield';
-    shield.class = 'loot';
-    Composite.add(dynamic, shield);
-    io.emit('add', shield.id, 'shield');
-  }
+  for (let i = 0; i < entity.token; i++) addLoot('token'); // add tokens
+  if (entity.sword > 0) addLoot('sword'); // add sword
+  if (entity.shield > 0) addLoot('shield'); // add shield
 }
 
 http.listen(port, () => console.log(`Listening on port ${port}`));
