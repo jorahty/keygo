@@ -110,8 +110,7 @@ io.on('connection', socket => {
     // disconnect means player has left game
     console.log(`Player left! Player count: ${--playerCount}`);
 
-    Composite.remove(dynamic, player); // remove player
-    io.emit('remove', player.id); // let everyone know player was removed
+    popEntity(player);
 
     socketIds.delete(player.id) // forget socket.id
   });
@@ -226,6 +225,8 @@ function injury(player, amount, attacker) {
 
   // check if dead
   if (player.health <= 0) {
+    popEntity(player);
+    
     io.to(socketIds.get(player.id)).emit('death', attacker.nickname);
     io.to(socketIds.get(attacker.id)).emit('kill', player.nickname);
 
@@ -236,6 +237,60 @@ function injury(player, amount, attacker) {
 
   // emit 'injury' with new health
   io.to(socketIds.get(player.id)).emit('injury', player.health);
+}
+
+// remove entity from world
+// add its loot to world
+// broadcast remove and add
+function popEntity(entity) {
+  Composite.remove(dynamic, entity); // remove player
+  io.emit('remove', entity.id); // let everyone know player was removed
+  
+  const { x, y } = entity.position;
+
+  // add tokens
+  for (let i = 0; i < entity.token; i++) {
+    const token = Bodies.fromVertices(x, y,
+      Vertices.fromPath(paths['token']), {
+        mass: 0.1,
+        friction: 0.001,
+      }
+    );
+    token.kind = 'token';
+    token.class = 'loot';
+    Composite.add(dynamic, token);
+    io.emit('add', token.id, 'token');
+  }
+  
+  // add sword
+  if (entity.sword > 0) {
+    const sword = Bodies.fromVertices(x, y,
+      Vertices.fromPath(paths['sword']), {
+        mass: 0.1,
+        friction: 0.001,
+      }
+    );
+    sword.kind = 'sword';
+    sword.class = 'loot';
+    Composite.add(dynamic, sword);
+    io.emit('add', sword.id, 'sword');
+  }
+
+  console.log('and ...');
+  // add shield
+  if (entity.shield > 0) {
+    const shield = Bodies.fromVertices(x, y,
+      Vertices.fromPath(paths['shield']), {
+        mass: 0.1,
+        friction: 0.001,
+      }
+    );
+    shield.kind = 'shield';
+    shield.class = 'loot';
+    Composite.add(dynamic, shield);
+    io.emit('add', shield.id, 'shield');
+    console.log('shield?');
+  }
 }
 
 http.listen(port, () => console.log(`Listening on port ${port}`));
