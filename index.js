@@ -110,7 +110,7 @@ io.on('connection', socket => {
     // disconnect means player has left game
     console.log(`Player left! Player count: ${--playerCount}`);
 
-    popEntity(player);
+    popPlayer(player);
 
     socketIds.delete(player.id) // forget socket.id
   });
@@ -144,7 +144,7 @@ setInterval(() => {
   for (const [playerId, socketId] of socketIds) {
     const you = players.find(player => player.id === playerId);
 
-    const leaderboard = top.includes(you) ? top : top.concat(you);
+    const leaderboard = top.includes(you) || !you ? top : top.concat(you);
 
     io.to(socketId).emit('leaderboard', leaderboard.map(
       ({ nickname, token }) => ({ nickname, token })
@@ -225,17 +225,21 @@ function injury(player, amount, attacker) {
 
   // check if dead
   if (player.health <= 0) {
-    popEntity(player);
+    popPlayer(player);
     
     io.to(socketIds.get(player.id)).emit('death', attacker.nickname);
     io.to(socketIds.get(attacker.id)).emit('kill', player.nickname);
 
-    // (display ad)
+    // respawn after 3 seconds
+    setTimeout(() => {
+      Composite.add(dynamic, player, {id: player.id});
+      io.emit('add', player.id, 'player'); // let everyone know player was added
+      player.health = 100;
+      player.token = 1;
+      player.sword = player.shield = 0;
+      Body.setPosition(player, { x: 0, y: -500 });
+    }, 3000);
 
-    // respawn
-    Composite.add(dynamic, player, {id: player.id});
-    player.health = 100;
-    Body.setPosition(player, { x: 0, y: -500 });
     return;
   }
 
@@ -243,10 +247,9 @@ function injury(player, amount, attacker) {
   io.to(socketIds.get(player.id)).emit('injury', player.health);
 }
 
-// remove entity from world
-// add its loot to world
-// broadcast remove and add
-function popEntity(entity) {
+// remove player from world and emit 'remove'
+// add items to world and emit 'add'
+function popPlayer(entity) {
   Composite.remove(dynamic, entity); // remove player
   io.emit('remove', entity.id); // let everyone know player was removed
   
