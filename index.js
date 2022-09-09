@@ -230,6 +230,10 @@ function injury(player, amount, attacker) {
     io.to(socketIds.get(player.id)).emit('death', attacker.nickname);
     io.to(socketIds.get(attacker.id)).emit('kill', player.nickname);
 
+    // (display ad)
+
+    // respawn
+    Composite.add(dynamic, player, {id: player.id});
     player.health = 100;
     Body.setPosition(player, { x: 0, y: -500 });
     return;
@@ -276,7 +280,6 @@ function popEntity(entity) {
     io.emit('add', sword.id, 'sword');
   }
 
-  console.log('and ...');
   // add shield
   if (entity.shield > 0) {
     const shield = Bodies.fromVertices(x, y,
@@ -289,7 +292,6 @@ function popEntity(entity) {
     shield.class = 'loot';
     Composite.add(dynamic, shield);
     io.emit('add', shield.id, 'shield');
-    console.log('shield?');
   }
 }
 
