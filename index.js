@@ -36,17 +36,18 @@ const dynamic = Composite.create();
 Composite.add(world, dynamic);
 
 // generate npcs, chests, loot
-['chest', 'sword', 'shield', 'worm', 'token'].forEach(kind => {
-  const body = Bodies.fromVertices(-400 + 800 * Math.random(), -1000,
-    Vertices.fromPath(paths[kind]), {
-      mass: 0.1,
-      friction: 0.001,
-    }
-  );
-  body.kind = kind;
-  body.class = ['worm', 'chest'].includes(kind) ? 'entity' : 'loot';
-  Composite.add(dynamic, body);
-});
+// ['chest', 'bag', 'worm'].forEach(kind => {
+//   const body = Bodies.fromVertices(-400 + 800 * Math.random(), -600,
+//     Vertices.fromPath(paths[kind]), {
+//       mass: 0.1,
+//       friction: 0.001,
+//     }
+//   );
+//   body.kind = kind;
+//   body.class = ['worm', 'chest'].includes(kind) ? 'entity' : 'loot';
+//   body.isStatic = body.class === 'loot';
+//   Composite.add(dynamic, body);
+// });
 
 // map player.id (used internally) to socket.id (used to communicate)
 const socketIds = new Map();
@@ -110,7 +111,8 @@ io.on('connection', socket => {
     // disconnect means player has left game
     console.log(`Player left! Player count: ${--playerCount}`);
 
-    popPlayer(player);
+    Composite.remove(dynamic, player); // remove player
+    io.emit('remove', player.id); // let everyone know player was removed
 
     socketIds.delete(player.id) // forget socket.id
   });
