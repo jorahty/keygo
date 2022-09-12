@@ -30,24 +30,40 @@ Composite.add(world,
   ),
 );
 
-// create composite for dynamic bodies for
-// fast access when extracting gamestate
+// create composite for dynamic bodies
 const dynamic = Composite.create();
 Composite.add(world, dynamic);
 
-// generate npcs, chests, loot
-// ['chest', 'bag', 'worm'].forEach(kind => {
-//   const body = Bodies.fromVertices(-400 + 800 * Math.random(), -600,
-//     Vertices.fromPath(paths[kind]), {
-//       mass: 0.1,
-//       friction: 0.001,
-//     }
-//   );
-//   body.kind = kind;
-//   body.class = ['worm', 'chest'].includes(kind) ? 'entity' : 'loot';
-//   body.isStatic = body.class === 'loot';
-//   Composite.add(dynamic, body);
-// });
+// create composite for loot (bags)
+const loot = Composite.create();
+Composite.add(world, loot);
+
+// generate dynamic bodies
+['chest', 'worm'].forEach(kind => {
+  const body = Bodies.fromVertices(-400 + 800 * Math.random(), -600,
+    Vertices.fromPath(paths[kind]), {
+      mass: 0.1,
+      friction: 0.001,
+    }
+  );
+  body.kind = kind;
+  body.class = 'entity'; // for collision type
+  Composite.add(dynamic, body);
+});
+
+// generate loot
+['bag'].forEach(kind => {
+  const body = Bodies.fromVertices(-400 + 800 * Math.random(), -600,
+    Vertices.fromPath(paths[kind]), {
+      mass: 0.1,
+      friction: 0.001,
+      isStatic: true,
+    }
+  );
+  body.kind = kind;
+  body.class = 'loot'; // for collision type
+  Composite.add(loot, body);
+});
 
 // map player.id (used internally) to socket.id (used to communicate)
 const socketIds = new Map();
@@ -75,11 +91,12 @@ io.on('connection', socket => {
   // get nickname (sent immediatly after connection)
   socket.on('nickname', nn => player.nickname = nn);
 
-  // emit 'add' for every dynamic body
-  dynamic.bodies.forEach(body => socket.emit('add', body.id, body.kind));
+  // emit 'add' for every preexisting body
+  dynamic.bodies.forEach(body => socket.emit('add', body.id, body.kind, body.position));
+  loot.bodies.forEach(body => socket.emit('add', body.id, body.kind, body.position));
 
   Composite.add(dynamic, player); // add player
-  io.emit('add', player.id, 'player'); // let everyone know player was added
+  io.emit('add', player.id, 'player', player.position); // let everyone know player was added
 
   socket.emit('id', player.id); // send id
 
@@ -161,14 +178,14 @@ Events.on(engine, "collisionStart", ({ pairs }) => {
     if (!(bodyA.kind === 'player' || bodyB.kind === 'player')) continue;
 
     // if other is loot, handle upgrade
-    if (bodyA.class === 'loot') {
-      handleUpgrade(bodyB, bodyA);
-      continue;
-    }
-    if (bodyB.class === 'loot') { 
-      handleUpgrade(bodyA, bodyB);
-      continue;
-    }
+    // if (bodyA.class === 'loot') {
+    //   handleUpgrade(bodyB, bodyA);
+    //   continue;
+    // }
+    // if (bodyB.class === 'loot') { 
+    //   handleUpgrade(bodyA, bodyB);
+    //   continue;
+    // }
 
     // if other is entity, handle stab
     if (bodyA.class === 'entity' || bodyB.class === 'entity') {
@@ -227,7 +244,8 @@ function injury(player, amount, attacker) {
 
   // check if dead
   if (player.health <= 0) {
-    popPlayer(player);
+    Composite.remove(dynamic, player); // remove player
+    io.emit('remove', player.id); // let everyone know player was removed
     
     io.to(socketIds.get(player.id)).emit('death', attacker.nickname);
     io.to(socketIds.get(attacker.id)).emit('kill', player.nickname);
@@ -235,11 +253,11 @@ function injury(player, amount, attacker) {
     // respawn after 3 seconds
     setTimeout(() => {
       Composite.add(dynamic, player, {id: player.id});
-      io.emit('add', player.id, 'player'); // let everyone know player was added
+      Body.setPosition(player, { x: 0, y: -500 });
       player.health = 100;
       player.token = 1;
       player.sword = player.shield = 0;
-      Body.setPosition(player, { x: 0, y: -500 });
+      io.emit('add', player.id, 'player', player.position); // let everyone know player was added
     }, 3000);
 
     return;

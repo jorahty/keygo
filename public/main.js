@@ -106,16 +106,17 @@ socket.on('id', id => myId = id); // save id
 
 // ██ listen for events to render ██
 
-socket.on('add', (id, kind) => {
+socket.on('add', (id, kind, {x, y}) => {
   // add body to world
   // appearance based on kind
   // for now, appearance defined by vertices; later, sprite
   Composite.add(world,
-    Bodies.fromVertices(-400 + Math.random() * 800, -300,
+    Bodies.fromVertices(x, y,
       Vertices.fromPath(paths[kind]),
       { id: id } // set given id
     )
   );
+  console.log(kind);
 });
 
 socket.on('remove', id => {
