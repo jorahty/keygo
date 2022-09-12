@@ -116,7 +116,6 @@ socket.on('add', (id, kind, {x, y}) => {
       { id: id } // set given id
     )
   );
-  console.log(kind);
 });
 
 socket.on('remove', id => {
@@ -162,7 +161,7 @@ socket.on('leaderboard', lb => {
   for (let i = 0; i < 4; i++) { // iterate over all 4 rows
     const row = leaderboard.childNodes[i];
     if (i < lb.length) {
-      row.firstChild.textContent = lb[i].token;
+      row.firstChild.textContent = lb[i].points;
       row.lastChild.textContent = lb[i].nickname;
     } else {
       row.firstChild.textContent = row.lastChild.textContent = '';
@@ -217,9 +216,10 @@ socket.on('death', nickname => {
 });
 
 // listen for upgrade
-socket.on('upgrade', (kind, level) => {
-  if (kind === 'sword') sword.textContent = level;
-  if (kind === 'shield') shield.textContent = level;
+socket.on('upgrade', (sword, shield, points) => {
+  console.log(sword, shield, points);
+  // if (kind === 'sword') sword.textContent = level;
+  // if (kind === 'shield') shield.textContent = level;
 });
 
 function display(message) {

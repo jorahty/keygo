@@ -62,6 +62,9 @@ Composite.add(world, loot);
   );
   body.kind = kind;
   body.class = 'loot'; // for collision type
+  body.points = Math.floor(Math.random() * 30);
+  body.sword = Math.floor(Math.random() * 4);
+  body.shield = Math.floor(Math.random() * 4);
   Composite.add(loot, body);
 });
 
@@ -84,7 +87,7 @@ io.on('connection', socket => {
   player.kind = 'player'; // every dynamic body needs kind
   player.controls = {};
   player.health = 100;
-  player.token = 1;
+  player.points = 1;
   player.sword = 0;
   player.shield = 0;
 
@@ -155,7 +158,7 @@ setInterval(() => {
     body => body.kind === 'player'
   );
 
-  players.sort((a, b) => b.token - a.token);
+  players.sort((a, b) => b.points - a.points);
 
   const top = players.slice(0, 3);
 
@@ -166,7 +169,7 @@ setInterval(() => {
     const leaderboard = top.includes(you) || !you ? top : top.concat(you);
 
     io.to(socketId).emit('leaderboard', leaderboard.map(
-      ({ nickname, token }) => ({ nickname, token })
+      ({ nickname, points }) => ({ nickname, points })
     ));
   }
 }, 3000);
@@ -178,14 +181,14 @@ Events.on(engine, "collisionStart", ({ pairs }) => {
     if (!(bodyA.kind === 'player' || bodyB.kind === 'player')) continue;
 
     // if other is loot, handle upgrade
-    // if (bodyA.class === 'loot') {
-    //   handleUpgrade(bodyB, bodyA);
-    //   continue;
-    // }
-    // if (bodyB.class === 'loot') { 
-    //   handleUpgrade(bodyA, bodyB);
-    //   continue;
-    // }
+    if (bodyA.class === 'loot') {
+      handleUpgrade(bodyB, bodyA);
+      continue;
+    }
+    if (bodyB.class === 'loot') { 
+      handleUpgrade(bodyA, bodyB);
+      continue;
+    }
 
     // if other is entity, handle stab
     if (bodyA.class === 'entity' || bodyB.class === 'entity') {
@@ -194,14 +197,16 @@ Events.on(engine, "collisionStart", ({ pairs }) => {
   }
 });
 
-function handleUpgrade(player, loot) {
-  player[loot.kind]++ // upgrade player
+function handleUpgrade(player, bag) {
+  player.points += bag.points;
+  if (bag.sword > player.sword) player.sword = bag.sword;
+  if (bag.shield > player.shield) player.shield = bag.shield;
 
   // inform player of their upgrade
-  io.to(socketIds.get(player.id)).emit('upgrade', loot.kind, player[loot.kind]);
+  io.to(socketIds.get(player.id)).emit('upgrade', player.sword, player.shield, bag.points);
 
-  Composite.remove(dynamic, loot); // remove loot from world
-  io.emit('remove', loot.id); // let everyone know loot was removed
+  Composite.remove(loot, bag); // remove loot from world
+  io.emit('remove', bag.id); // let everyone know loot was removed
 }
 
 function handleStab(bodyA, bodyB, activeContacts, collision) {
@@ -255,7 +260,7 @@ function injury(player, amount, attacker) {
       Composite.add(dynamic, player, {id: player.id});
       Body.setPosition(player, { x: 0, y: -500 });
       player.health = 100;
-      player.token = 1;
+      player.points = 1;
       player.sword = player.shield = 0;
       io.emit('add', player.id, 'player', player.position); // let everyone know player was added
     }, 3000);
