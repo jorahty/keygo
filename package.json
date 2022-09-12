@@ -6,10 +6,7 @@
     "matter-js": "*",
     "poly-decomp": "*"
   },
-  "devDependencies": {
-    "nodemon": "*"
-  },
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "node index.js"
   }
 }
