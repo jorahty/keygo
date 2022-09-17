@@ -61,11 +61,20 @@ td {
   font-size: 1.6vh;
 }
 
-p {
+article {
   position: absolute;
-  top: calc(min(60vh, 100vw) - 2vh);
+  bottom: calc(100vh - min(60vh, 100vw));
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: end;
+  gap: 10px;
+}
+
+p {
+  margin: 0;
 }
 
 section {

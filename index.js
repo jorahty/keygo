@@ -8,14 +8,14 @@ app.use(express.static('public'));
 
 const paths = require('./paths.json');
 
-const { Engine, Runner, Body, Common,
+const { Engine, Runner, Body, Common, Sleeping,
   Vertices, Events, Bodies, Composite } = require('matter-js');
 
 // provide concave decomposition support library
 Common.setDecomp(require('poly-decomp'));
 
 // create an engine and physics world
-const engine = Engine.create(),
+const engine = Engine.create({ enableSleeping: true }),
   world = engine.world;
 
 // run the engine
@@ -39,7 +39,8 @@ const loot = Composite.create();
 Composite.add(world, loot);
 
 // generate dynamic bodies
-['chest', 'worm'].forEach(kind => {
+[1,2,3,4,5].forEach(() => {
+  const kind = Math.random() > 0.5 ? 'worm' : 'chest';
   const body = Bodies.fromVertices(-400 + 800 * Math.random(), -600,
     Vertices.fromPath(paths[kind]), {
       mass: 0.1,
@@ -52,19 +53,21 @@ Composite.add(world, loot);
 });
 
 // generate loot
-['bag'].forEach(kind => {
-  const body = Bodies.fromVertices(-400 + 800 * Math.random(), -600,
-    Vertices.fromPath(paths[kind]), {
+[1,2,3,4,5,6,7,8,9].forEach(() => {
+  const body = Bodies.fromVertices(-400 + 800 * Math.random(), -600 * Math.random(),
+    Vertices.fromPath(paths['bag']), {
       mass: 0.1,
       friction: 0.001,
       isStatic: true,
+      isSensor: true,
     }
   );
-  body.kind = kind;
+  body.kind = 'bag';
   body.class = 'loot'; // for collision type
   body.points = Math.floor(Math.random() * 30);
   body.sword = Math.floor(Math.random() * 4);
   body.shield = Math.floor(Math.random() * 4);
+  body.isAvailable = true
   Composite.add(loot, body);
 });
 
@@ -111,6 +114,7 @@ io.on('connection', socket => {
     const control = code.toLowerCase();
     const active = control === code;
     player.controls[control] = active;
+    Sleeping.set(player, false);
   });
 
   // move player according to control state
@@ -131,8 +135,7 @@ io.on('connection', socket => {
     // disconnect means player has left game
     console.log(`Player left! Player count: ${--playerCount}`);
 
-    Composite.remove(dynamic, player); // remove player
-    io.emit('remove', player.id); // let everyone know player was removed
+    popEntity(player);
 
     socketIds.delete(player.id) // forget socket.id
   });
@@ -142,12 +145,12 @@ io.on('connection', socket => {
 // extract and broadcast gamestate
 // send dynamic bodies update
 setInterval(() => {
-  const gamestate = dynamic.bodies.map(body => ({
-    i: body.id,
-    x: Math.round(body.position.x),
-    y: Math.round(body.position.y),
-    r: Math.round(body.angle * 100) / 100,
-  }));
+  const gamestate = dynamic.bodies.flatMap(b => b.isSleeping ? [] : {
+    i: b.id,
+    x: Math.round(b.position.x),
+    y: Math.round(b.position.y),
+    r: Math.round(b.angle * 100) / 100,
+  });
 
   io.volatile.emit('update', gamestate);
 }, 1000 / 30);
@@ -198,6 +201,7 @@ Events.on(engine, "collisionStart", ({ pairs }) => {
 });
 
 function handleUpgrade(player, bag) {
+  if (!bag.isAvailable) return;
   player.points += bag.points;
   if (bag.sword > player.sword) player.sword = bag.sword;
   if (bag.shield > player.shield) player.shield = bag.shield;
@@ -249,8 +253,7 @@ function injury(player, amount, attacker) {
 
   // check if dead
   if (player.health <= 0) {
-    Composite.remove(dynamic, player); // remove player
-    io.emit('remove', player.id); // let everyone know player was removed
+    popEntity(player);
     
     io.to(socketIds.get(player.id)).emit('death', attacker.nickname);
     io.to(socketIds.get(attacker.id)).emit('kill', player.nickname);
@@ -272,30 +275,32 @@ function injury(player, amount, attacker) {
   io.to(socketIds.get(player.id)).emit('injury', player.health);
 }
 
-// remove player from world and emit 'remove'
+// remove entity from world and emit 'remove'
 // add items to world and emit 'add'
-function popPlayer(entity) {
-  Composite.remove(dynamic, entity); // remove player
-  io.emit('remove', entity.id); // let everyone know player was removed
+function popEntity(entity) {
+  Composite.remove(dynamic, entity); // remove entity
+  io.emit('remove', entity.id); // let everyone know entity was removed
   
   const { x, y } = entity.position;
 
-  const addLoot = (kind) => {
-    const token = Bodies.fromVertices(x, y,
-      Vertices.fromPath(paths[kind]), {
-        mass: 0.1,
-        friction: 0.001,
-      }
-    );
-    token.kind = kind;
-    token.class = 'loot';
-    Composite.add(dynamic, token);
-    io.emit('add', token.id, kind);
-  }
-
-  for (let i = 0; i < entity.token; i++) addLoot('token'); // add tokens
-  if (entity.sword > 0) addLoot('sword'); // add sword
-  if (entity.shield > 0) addLoot('shield'); // add shield
+  // drop bag
+  const bag = Bodies.fromVertices(x, y,
+    Vertices.fromPath(paths['bag']), {
+      mass: 0.1,
+      friction: 0.001,
+      isStatic: true,
+    }
+  );
+  bag.kind = 'bag';
+  bag.class = 'loot'; // for collision type
+  bag.points = entity.points;
+  bag.sword = entity.sword;
+  bag.shield = entity.shield;
+  Composite.add(loot, bag);
+  io.emit('add', bag.id, 'bag', bag.position); // let everyone know bag was added
+  // make bag unavailable for half second so visible before picked up
+  bag.isAvailable = false;
+  setTimeout(() => bag.isAvailable = true, 500);
 }
 
 http.listen(port, () => console.log(`Listening on port ${port}`));

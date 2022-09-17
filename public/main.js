@@ -47,9 +47,6 @@ Render.lookAt(render, {
   max: { x: 360, y: 360 },
 });
 
-// run the renderer
-Render.run(render);
-
 // add terrain, map, decoration
 Composite.add(world,
   Bodies.fromVertices(0, 0,
@@ -92,6 +89,14 @@ document.querySelector(':root').style.setProperty('--health', '100%');
 [1, 2].forEach(() => health.appendChild(document.createElement('div')));
 hitpoints.textContent = 100;
 
+// create controls container
+const controls = document.createElement('section');
+document.body.appendChild(controls);
+
+// create messages container
+const messages = document.createElement('article');
+document.body.appendChild(messages);
+
 // connect to server
 
 // const nickname = prompt('Name'); // get nickname
@@ -125,6 +130,7 @@ socket.on('remove', id => {
 
 // update position and rotation of dynamic bodies
 socket.on('update', gamestate => {
+  console.log(gamestate);
   for (const { i, x, y, r } of gamestate) {
     const body = world.bodies.find(body => body.id === i);
     if (!body) continue;
@@ -133,6 +139,8 @@ socket.on('update', gamestate => {
   }
 
   moveCamera();
+
+  Render.world(render);
 });
 
 // have the "camera" follow the player with myId
@@ -217,24 +225,21 @@ socket.on('death', nickname => {
 
 // listen for upgrade
 socket.on('upgrade', (sword, shield, points) => {
-  console.log(sword, shield, points);
+  display(`${sword} ${shield} ${points}`);
   // if (kind === 'sword') sword.textContent = level;
   // if (kind === 'shield') shield.textContent = level;
 });
 
 function display(message) {
   const p = document.createElement('p');
-  document.body.appendChild(p);
+  messages.appendChild(p);
   p.textContent = message;
   setTimeout(() => (
-    document.body.removeChild(p)
+    messages.removeChild(p)
   ), 3000);
 }
 
 // ██ create and configure controls to send input to server ██
-
-const controls = document.createElement('section');
-document.body.appendChild(controls);
 
 // define controls
 const left = document.createElement('button');
