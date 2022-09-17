@@ -98,8 +98,8 @@ io.on('connection', socket => {
   socket.on('nickname', nn => player.nickname = nn);
 
   // emit 'add' for every preexisting body
-  dynamic.bodies.forEach(body => socket.emit('add', body.id, body.kind, body.position));
-  loot.bodies.forEach(body => socket.emit('add', body.id, body.kind, body.position));
+  dynamic.bodies.forEach(body => socket.emit('add', body.id, body.kind, body.position, body.angle));
+  loot.bodies.forEach(body => socket.emit('add', body.id, body.kind, body.position, body.angle));
 
   Composite.add(dynamic, player); // add player
   io.emit('add', player.id, 'player', player.position); // let everyone know player was added
@@ -153,7 +153,7 @@ setInterval(() => {
   });
 
   io.volatile.emit('update', gamestate);
-}, 1000 / 30);
+}, 1000 / 40);
 
 // infrequently emit leaderboard to all clients
 setInterval(() => {
