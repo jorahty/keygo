@@ -117,8 +117,12 @@ socket.on('add', (id, kind, {x, y}, angle) => {
   // for now, appearance defined by vertices; later, sprite
   Composite.add(world,
     Bodies.fromVertices(x, y,
-      Vertices.fromPath(paths[kind]),
-      { id, angle: angle ? angle : 0 }
+      Vertices.fromPath(paths[kind]), { id, angle: angle ? angle : 0,
+        render: {
+          strokeStyle: '#000',
+          lineWidth: 4,
+        },
+      }
     )
   );
 });
